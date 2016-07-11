@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.jetbrains.kotlin.core.scriptTemplateProvider">
+      <provider
+            class="org.eclipse.buildship.kotlin.GradleKotlinScriptTemplateProvider"
+            id="org.eclipse.buildship.kotlin.scripttemplateprovider"
+            name="Gradle Kotlin script">
+      </provider>
+   </extension>
+
+</plugin>
