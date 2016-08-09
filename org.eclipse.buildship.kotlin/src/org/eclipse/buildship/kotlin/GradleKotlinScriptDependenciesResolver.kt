@@ -18,23 +18,25 @@ class GradleKotlinScriptDependenciesResolver : ScriptDependenciesResolverEx {
 		if (environment == null) {
 			return previousDependencies			
 		} else {
+			val rtPath = environment["rtPath"] as List<File>
 			val projectRoot = environment["rootProject"] as File
 			val model = KotlinModelQuery.retrieveKotlinBuildScriptModelFrom(projectRoot)
-			return retrieveDependenciesFromProject(projectRoot, model)
+			return retrieveDependenciesFromProject(projectRoot, model, rtPath)
 		}
     }
 	
-    private fun retrieveDependenciesFromProject(projectRoot: File, model: KotlinBuildScriptModel): KotlinScriptExternalDependencies {
+    private fun retrieveDependenciesFromProject(projectRoot: File, model: KotlinBuildScriptModel, rtPath: List<File>): KotlinScriptExternalDependencies {
         val (classpath, ignored) = model.classPath.partition { !it.name.startsWith("groovy") }
         val gradleKotlinJar = classpath.filter { it.name.startsWith("gradle-script-kotlin-") }
         val gradleInstallation = classpath.find { it.absolutePath.contains("dists") && it.parentFile.name.equals("lib") }!!.parentFile.parentFile
         val sources = gradleKotlinJar + buildSrcRootsOf(projectRoot) + sourceRootsOf(gradleInstallation)
-		printProjectDependencies(classpath, ignored, gradleKotlinJar, gradleInstallation, sources)
-        return makeDependencies(classpath, sources)
+		printProjectDependencies(classpath, ignored, gradleKotlinJar, gradleInstallation, sources, rtPath)
+        return makeDependencies(rtPath + classpath, sources)
     }
 	
-	private fun printProjectDependencies(classpath: Iterable<File>, ignored: Iterable<File>, gradleKotlinJar: Iterable<File>, gradleInstallation: File, sources: Iterable<File>) {
+	private fun printProjectDependencies(classpath: Iterable<File>, ignored: Iterable<File>, gradleKotlinJar: Iterable<File>, gradleInstallation: File, sources: Iterable<File>, rtPath: Iterable<File>) {
 		System.out.println("--- Project dependencies ---")
+		print("Runtime  :  ", rtPath)
 		print("Classpath:  ", classpath)
 		print("Ignored:    ", ignored)
 		print("KotlinJar:  ", gradleKotlinJar)
@@ -45,7 +47,7 @@ class GradleKotlinScriptDependenciesResolver : ScriptDependenciesResolverEx {
 	private fun print(type: String, entries: Iterable<File>) {
 		entries.forEach {  System.out.println("${type}${it.absolutePath}") }
 	}
-	
+
     /**
      * Returns all conventional source directories under buildSrc if any.
      * This won't work for buildSrc projects with a custom source directory layout

@@ -6,6 +6,7 @@ import org.eclipse.core.runtime.FileLocator
 import org.eclipse.core.runtime.Platform
 import org.jetbrains.kotlin.script.ScriptTemplateProvider
 import java.io.File
+import org.eclipse.jdt.launching.JavaRuntime
 
 class GradleKotlinScriptTemplateProvider : ScriptTemplateProvider {
 
@@ -32,13 +33,11 @@ class GradleKotlinScriptTemplateProvider : ScriptTemplateProvider {
 
     override val environment: Map<String, Any?>?
         get() {
-			return mapOf("rootProject" to rootProjectLocation())
+			return mapOf(
+				"rootProject" to rootProjectLocation(),
+				"rtPath" to rtPath()
+			)
 		} 
-		
-	private fun getModels(): List<File> {
-		val model = KotlinModelQuery.retrieveKotlinBuildScriptModelFrom(rootProjectLocation()!!)
-		return model.classPath
-	}
 	
 	private fun rootProjectLocation(): File? {
 		return rootProject()?.getLocation()?.toFile()
@@ -50,9 +49,9 @@ class GradleKotlinScriptTemplateProvider : ScriptTemplateProvider {
 		}
 	}
 	
-	private fun externalLibs(): List<File> {
-		// TODO (donat) collect external libs. Will we ever have one?
-		return emptyList()
+	private fun rtPath(): List<File> {
+		val rtJar = File(JavaRuntime.getDefaultVMInstall().getInstallLocation(), "jre/lib/rt.jar")
+		return if (rtJar.exists()) listOf(rtJar) else emptyList()
 	}
 	
     override val id: String
