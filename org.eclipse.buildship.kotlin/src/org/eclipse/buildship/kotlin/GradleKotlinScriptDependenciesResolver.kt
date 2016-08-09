@@ -24,13 +24,28 @@ class GradleKotlinScriptDependenciesResolver : ScriptDependenciesResolverEx {
 		}
     }
 	
-	  private fun retrieveDependenciesFromProject(projectRoot: File, model: KotlinBuildScriptModel): KotlinScriptExternalDependencies {
-	  	val classpath = model.classPath
-		val gradleInstallation = classpath.find { it.absolutePath.contains("dists") && it.parentFile.name.equals("lib") }!!.parentFile
-		val sources = /*gradleKotlinJar +*/ buildSrcRootsOf(projectRoot) + sourceRootsOf(gradleInstallation)
-        return makeDependencies(emptyList(), sources)
-	  }
-
+    private fun retrieveDependenciesFromProject(projectRoot: File, model: KotlinBuildScriptModel): KotlinScriptExternalDependencies {
+        val (classpath, ignored) = model.classPath.partition { !it.name.startsWith("groovy") }
+        val gradleKotlinJar = classpath.filter { it.name.startsWith("gradle-script-kotlin-") }
+        val gradleInstallation = classpath.find { it.absolutePath.contains("dists") && it.parentFile.name.equals("lib") }!!.parentFile.parentFile
+        val sources = gradleKotlinJar + buildSrcRootsOf(projectRoot) + sourceRootsOf(gradleInstallation)
+		printProjectDependencies(classpath, ignored, gradleKotlinJar, gradleInstallation, sources)
+        return makeDependencies(classpath, sources)
+    }
+	
+	private fun printProjectDependencies(classpath: Iterable<File>, ignored: Iterable<File>, gradleKotlinJar: Iterable<File>, gradleInstallation: File, sources: Iterable<File>) {
+		System.out.println("--- Project dependencies ---")
+		print("Classpath:  ", classpath)
+		print("Ignored:    ", ignored)
+		print("KotlinJar:  ", gradleKotlinJar)
+		print("GradleDist: ", listOf(gradleInstallation))
+		print("Sources:    ", sources)
+	}
+	
+	private fun print(type: String, entries: Iterable<File>) {
+		entries.forEach {  System.out.println("${type}${it.absolutePath}") }
+	}
+	
     /**
      * Returns all conventional source directories under buildSrc if any.
      * This won't work for buildSrc projects with a custom source directory layout
@@ -57,7 +72,6 @@ class GradleKotlinScriptDependenciesResolver : ScriptDependenciesResolverEx {
 
     companion object {
         val implicitImports = listOf(
-        	"java.io.*",
             "org.gradle.api.plugins.*",
             "org.gradle.script.lang.kotlin.*")
     }
