@@ -13,13 +13,15 @@ import java.net.URLClassLoader
 import java.util.Arrays
 
 class GradleKotlinScriptDependenciesResolver : ScriptDependenciesResolverEx {
-
-    override fun resolve(script: ScriptContents, environment: Map<String, Any?>?, previousDependencies: KotlinScriptExternalDependencies?): KotlinScriptExternalDependencies? {
+	override fun resolve(script: ScriptContents, environment: Map<String, Any?>?, previousDependencies: KotlinScriptExternalDependencies?): KotlinScriptExternalDependencies? {
 		if (environment == null) {
 			return previousDependencies			
 		} else {
+			val scriptFile = script.file!!
+			
+			@Suppress("UNCHECKED_CAST")
 			val rtPath = environment["rtPath"] as List<File>
-			val projectRoot = environment["rootProject"] as File
+			val projectRoot = rootProjectLocation(scriptFile)
 			val model = KotlinModelQuery.retrieveKotlinBuildScriptModelFrom(projectRoot)
 			return retrieveDependenciesFromProject(projectRoot, model, rtPath)
 		}
@@ -71,7 +73,14 @@ class GradleKotlinScriptDependenciesResolver : ScriptDependenciesResolverEx {
             override val imports = implicitImports
             override val sources = sources
         }
-
+	
+	private fun rootProjectLocation(scriptFile: File): File {
+		if (scriptFile.name == "build.gradle.kts") return File(scriptFile.parent)
+		
+		// TODO: search for project root directory
+		return null!!
+	} 
+	
     companion object {
         val implicitImports = listOf(
             "org.gradle.api.plugins.*",

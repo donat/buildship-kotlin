@@ -9,8 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.launching.JavaRuntime;
@@ -50,10 +48,7 @@ public class GradleKotlinScriptTemplateProvider implements ScriptTemplateProvide
 	@Override
 	public Map<String, Object> getEnvironment() {
 		HashMap<String, Object> environment = new HashMap<String, Object>();
-		
-		environment.put("rootProject", rootProjectLocation());
 		environment.put("rtPath", rtPath());
-		
 		return environment;
 	}
 
@@ -75,21 +70,6 @@ public class GradleKotlinScriptTemplateProvider implements ScriptTemplateProvide
 	@Override
 	public boolean isValid() {
 		return true;
-	}
-	
-	private File rootProjectLocation() {
-		return rootProject().getLocation().toFile();
-	} 
-	
-	private IProject rootProject() {
-		IProject[] projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
-		for (IProject project : projects) {
-			if (project.isAccessible() && project.getFile("build.gradle.kts").exists()) {
-				return project;
-			}
-		}
-		
-		return null;
 	}
 	
 	private List<File> rtPath() {
