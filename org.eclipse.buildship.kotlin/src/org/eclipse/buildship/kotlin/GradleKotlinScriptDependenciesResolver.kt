@@ -17,17 +17,16 @@ class GradleKotlinScriptDependenciesResolver : ScriptDependenciesResolverEx {
 		if (environment == null) {
 			return previousDependencies			
 		} else {
-			val scriptFile = script.file!!
-			
 			@Suppress("UNCHECKED_CAST")
 			val rtPath = environment["rtPath"] as List<File>
-			val projectRoot = rootProjectLocation(scriptFile)
+			val projectRoot = environment["rootProject"] as File
 			val model = KotlinModelQuery.retrieveKotlinBuildScriptModelFrom(projectRoot)
+			
 			return retrieveDependenciesFromProject(projectRoot, model, rtPath)
 		}
     }
 	
-    private fun retrieveDependenciesFromProject(projectRoot: File, model: KotlinBuildScriptModel, rtPath: List<File>): KotlinScriptExternalDependencies {
+	private fun retrieveDependenciesFromProject(projectRoot: File, model: KotlinBuildScriptModel, rtPath: List<File>): KotlinScriptExternalDependencies {
         val (classpath, ignored) = model.classPath.partition { !it.name.startsWith("groovy") }
         val gradleKotlinJar = classpath.filter { it.name.startsWith("gradle-script-kotlin-") }
         val gradleInstallation = classpath.find { it.absolutePath.contains("dists") && it.parentFile.name.equals("lib") }!!.parentFile.parentFile
@@ -73,13 +72,6 @@ class GradleKotlinScriptDependenciesResolver : ScriptDependenciesResolverEx {
             override val imports = implicitImports
             override val sources = sources
         }
-	
-	private fun rootProjectLocation(scriptFile: File): File {
-		if (scriptFile.name == "build.gradle.kts") return File(scriptFile.parent)
-		
-		// TODO: search for project root directory
-		return null!!
-	} 
 	
     companion object {
         val implicitImports = listOf(

@@ -2,7 +2,7 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
-         point="org.jetbrains.kotlin.core.scriptTemplateProvider">
+         point="org.jetbrains.kotlin.core.scriptTemplateProviderEx">
       <provider
             class="org.eclipse.buildship.kotlin.GradleKotlinScriptTemplateProvider"
             id="org.eclipse.buildship.kotlin.scripttemplateprovider"

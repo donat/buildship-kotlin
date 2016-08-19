@@ -9,19 +9,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.launching.JavaRuntime;
+import org.jetbrains.kotlin.core.model.ScriptTemplateProviderEx;
+import org.jetbrains.kotlin.script.ScriptDependenciesResolver;
 import org.jetbrains.kotlin.script.ScriptTemplateProvider;
 import org.osgi.framework.Bundle;
 
-public class GradleKotlinScriptTemplateProvider implements ScriptTemplateProvider {
-
-	// TODO (donat) extension point can't be used if ScriptTemplateProvider is implemented in Java
-	
-	// TODO (donat) In order to load a TAPI model for a project, the the extension point should
-	// supply the corresponding IProject instance
-	
+// NOTE: ScriptTemplateProviderEx interface should be implemented
+public class GradleKotlinScriptTemplateProvider implements ScriptTemplateProviderEx {
 	private static String[] classpathEntries = new String[] {
 				"/bin",
 				"/lib/gradle-core-3.0-20160720184418+0000.jar",
@@ -44,31 +43,40 @@ public class GradleKotlinScriptTemplateProvider implements ScriptTemplateProvide
 		
 		return result;
 	}
-
+	
 	@Override
-	public Map<String, Object> getEnvironment() {
+	public Map<String, Object> getEnvironment(IFile file) {
 		HashMap<String, Object> environment = new HashMap<String, Object>();
 		environment.put("rtPath", rtPath());
+		
+		// NOTE: It's now possible to get environment per script file
+		environment.put("rootProject", file.getProject().getLocation().toFile());
 		return environment;
 	}
-
+	
+	// NOTE: getId(), getVersion() and isValid() methods were removed. What do you think, are they needed?
+	
+	// NOTE: list is now expected
 	@Override
-	public String getId() {
-		return "Test";
+	public List<String> getTemplateClassNames() {
+		ArrayList<String> list = new ArrayList<String>();
+		list.add("org.eclipse.buildship.kotlin.KotlinBuildScript");
+		return list;
 	}
 
 	@Override
-	public String getTemplateClassName() {
-		return "org.eclipse.buildship.kotlin.KotlinBuildScript";
+	public ScriptDependenciesResolver getResolver() {
+		// NOTE: This resolver will be executed in Eclipse, but it doesn't work now.
+		return null;
 	}
 
 	@Override
-	public int getVersion() {
-		return 10;
-	}
-
-	@Override
-	public boolean isValid() {
+	public boolean isApplicable(IFile file) {
+		IProject project = file.getProject();
+		
+		// NOTE: now it's possible to apply more confident decision about applicability, but
+		// pattern in @ScriptTemplateDefinition should still be valid
+		
 		return true;
 	}
 	
@@ -80,4 +88,5 @@ public class GradleKotlinScriptTemplateProvider implements ScriptTemplateProvide
 		
 		return Collections.emptyList();
 	}
+
 }
