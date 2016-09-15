@@ -1,28 +1,27 @@
 package org.eclipse.buildship.kotlin
 
-import org.gradle.internal.classpath.ClassPath
-import org.gradle.script.lang.kotlin.provider.KotlinScriptPluginFactory
 import org.gradle.script.lang.kotlin.support.KotlinBuildScriptModel
-import org.gradle.tooling.GradleConnector
-import org.gradle.tooling.ProjectConnection
 import org.jetbrains.kotlin.script.KotlinScriptExternalDependencies
 import org.jetbrains.kotlin.script.ScriptContents
-import org.jetbrains.kotlin.script.ScriptDependenciesResolverEx
+import org.jetbrains.kotlin.script.ScriptDependenciesResolver
+import org.jetbrains.kotlin.script.asFuture
 import java.io.File
-import java.net.URLClassLoader
-import java.util.Arrays
+import java.util.concurrent.Future
 
-class GradleKotlinScriptDependenciesResolver : ScriptDependenciesResolverEx {
-	override fun resolve(script: ScriptContents, environment: Map<String, Any?>?, previousDependencies: KotlinScriptExternalDependencies?): KotlinScriptExternalDependencies? {
+class GradleKotlinScriptDependenciesResolver : ScriptDependenciesResolver {
+	
+	override fun resolve(script: ScriptContents,
+				environment: Map<String, Any?>?,
+				report: (ScriptDependenciesResolver.ReportSeverity, String, ScriptContents.Position?) -> Unit,
+				previousDependencies: KotlinScriptExternalDependencies?) : Future<KotlinScriptExternalDependencies?> {
 		if (environment == null) {
-			return previousDependencies			
+			return makeDependencies(emptyList()).asFuture()			
 		} else {
 			@Suppress("UNCHECKED_CAST")
 			val rtPath = environment["rtPath"] as List<File>
 			val projectRoot = environment["rootProject"] as File
 			val model = KotlinModelQuery.retrieveKotlinBuildScriptModelFrom(projectRoot)
-			
-			return retrieveDependenciesFromProject(projectRoot, model, rtPath)
+			return retrieveDependenciesFromProject(projectRoot, model, rtPath).asFuture()
 		}
     }
 	

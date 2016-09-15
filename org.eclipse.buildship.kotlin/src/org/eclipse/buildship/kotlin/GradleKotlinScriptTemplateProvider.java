@@ -10,13 +10,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.jetbrains.kotlin.core.model.ScriptTemplateProviderEx;
 import org.jetbrains.kotlin.script.ScriptDependenciesResolver;
-import org.jetbrains.kotlin.script.ScriptTemplateProvider;
 import org.osgi.framework.Bundle;
 
 // NOTE: ScriptTemplateProviderEx interface should be implemented
@@ -30,7 +28,7 @@ public class GradleKotlinScriptTemplateProvider implements ScriptTemplateProvide
 	};
 
 	@Override
-	public Iterable<String> getDependenciesClasspath() {
+	public Iterable<String> getTemplateClassClasspath() {
 		Bundle pluginBundle = Platform.getBundle(Activator.PLUGIN_ID);
 		ArrayList<String> result = new ArrayList<String>();
 		for (String path : classpathEntries) {
@@ -58,10 +56,8 @@ public class GradleKotlinScriptTemplateProvider implements ScriptTemplateProvide
 	
 	// NOTE: list is now expected
 	@Override
-	public List<String> getTemplateClassNames() {
-		ArrayList<String> list = new ArrayList<String>();
-		list.add("org.eclipse.buildship.kotlin.KotlinBuildScript");
-		return list;
+	public String getTemplateClassName() {
+		return "org.eclipse.buildship.kotlin.KotlinBuildScript";
 	}
 
 	@Override
@@ -72,7 +68,7 @@ public class GradleKotlinScriptTemplateProvider implements ScriptTemplateProvide
 
 	@Override
 	public boolean isApplicable(IFile file) {
-		IProject project = file.getProject();
+		//IProject project = file.getProject();
 		
 		// NOTE: now it's possible to apply more confident decision about applicability, but
 		// pattern in @ScriptTemplateDefinition should still be valid
